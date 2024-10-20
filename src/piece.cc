@@ -7,47 +7,49 @@
 #include <stdexcept>
 #include <string>
 
-#include "piece_texture.h"
 #include "square.h"
+#include "texture_factory.h"
 
-Piece::Piece(EPieceType type, EPieceColor color) : _type(type), _color(color) {
-    _sprite.setTexture(PieceTexture::getTexture(color, type));
-    PieceTexture::getTexture(color, type).setSmooth(true);
-    sf::Vector2u origSize = _sprite.getTexture()->getSize();
+Piece::Piece(EPieceType type, EPieceColor color) : m_Type(type), m_Color(color) {
+    m_Sprite.setTexture(TextureFactory::getTexture(color, type));
+    TextureFactory::getTexture(color, type).setSmooth(true);
+    sf::Vector2u origSize = m_Sprite.getTexture()->getSize();
     float scaleX = 100.f / origSize.x;
     float scaleY = 100.f / origSize.y;
-    _sprite.setScale(scaleX, scaleY);
+    m_Sprite.setScale(scaleX, scaleY);
 }
 
-EPieceColor Piece::getColor() const { return _color; }
-EPieceType Piece::getType() const { return _type; }
+EPieceColor Piece::getColor() const { return m_Color; }
+EPieceType Piece::getType() const { return m_Type; }
 
 bool Piece::canMoveTo(Square::SquarePtr square) const {
     int x = square->getX();
     int y = square->getY();
-    return std::any_of(_moves.begin(), _moves.end(),
+    return std::any_of(m_PossibleMoves.begin(), m_PossibleMoves.end(),
                        [&](const auto& move) { return move.first == x && move.second == y; });
 }
 
-void Piece::deOccupy() { _square = nullptr; }
+void Piece::deOccupy() { m_Square = nullptr; }
 
 bool Piece::moveTo(Square::SquarePtr square) {
-    if (!canMoveTo(square)) {
-        throw std::runtime_error("Can't move to (" + std::to_string(square->getX()) + "," +
-                                 std::to_string(square->getY()) + ")");
-    }
+    // if (!canMoveTo(square)) {
+    //     throw std::runtime_error("Can't move to (" + std::to_string(square->getX()) + "," +
+    //                              std::to_string(square->getY()) + ")");
+    // }
     if (square->isOccupied()) {
         square->getOccupier()->deOccupy();
         square->clear();
     }
     square->setOccupier(shared_from_this());
-    _square = square;
-    _sprite.setPosition(square->getX(), square->getY());
+    m_Square = square;
+    m_Sprite.setPosition(square->getX(), square->getY());
     return true;
 }
 
-void Piece::setSquare(Square::SquarePtr sq) { _square = sq; }
+void Piece::setSquare(Square::SquarePtr sq) { m_Square = sq; }
 
-sf::Vector2f Piece::getSpritePosition() { return _sprite.getPosition(); }
-sf::Sprite& Piece::getSprite() { return _sprite; }
-void Piece::setSpritePosition(sf::Vector2f pos) { _sprite.setPosition(pos); }
+sf::Vector2f Piece::getSpritePosition() { return m_Sprite.getPosition(); }
+sf::Sprite& Piece::getSprite() { return m_Sprite; }
+void Piece::setSpritePosition(sf::Vector2f pos) { m_Sprite.setPosition(pos); }
+
+void Piece::generateMoves() {}

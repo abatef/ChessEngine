@@ -5,20 +5,22 @@
 
 #include "board.h"
 #include "input_handler.h"
+#include "piece.h"
 #include "renderer.h"
 #include "square.h"
 
 class Engine {
    private:
     Renderer m_Renderer;
-    InputHandler m_Handler;
+    InputDispatcher m_Handler;
     Board m_Board;
 
    public:
     Engine();
-    Engine(InputHandler input);
+    Engine(InputDispatcher input);
     void handleInput();
     void loop();
+    static Square::SquarePtr selectedSquare;
 };
 
 #endif

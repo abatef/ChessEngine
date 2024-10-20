@@ -1,15 +1,20 @@
 #include "board.h"
 
+#include <SFML/System/Vector2.hpp>
 #include <iostream>
 #include <memory>
 #include <vector>
 
-#include "bishop.h"
-#include "pawn.h"
 #include "piece.h"
 #include "square.h"
 
+void Board::placePiece(int x, int y, EPieceType type, EPieceColor color) {
+    Piece::PiecePtr piece = std::make_shared<Piece>(type, color);
+    m_Squares[x][y]->setOccupier(piece);
+}
+
 bool Board::init() {
+    // Initialize Empty Squares
     for (int i = 0; i < 8; i++) {
         std::vector<Square::SquarePtr> row;
         EPieceColor color = (i % 2 == 0) ? EPieceColor::WHITE : EPieceColor::BLACK;
@@ -20,27 +25,47 @@ bool Board::init() {
             color = (color == EPieceColor::WHITE) ? EPieceColor::BLACK : EPieceColor::WHITE;
         }
 
-        squares.push_back(row);
+        m_Squares.push_back(row);
     }
-    // i -> columns
+    // Initial Pieces Positions
+    // PAWNS
     for (int i = 0; i < 8; i++) {
-        Piece::PiecePtr w_Pawn = std::make_shared<Pawn>(EPieceColor::WHITE);
-        squares[i][1]->setOccupier(w_Pawn);
-        Piece::PiecePtr b_Pawn = std::make_shared<Pawn>(EPieceColor::BLACK);
-        squares[i][6]->setOccupier(b_Pawn);
+        placePiece(i, 1, EPieceType::PAWN, EPieceColor::BLACK);
+        placePiece(i, 6, EPieceType::PAWN, EPieceColor::WHITE);
     }
-
-    Piece::PiecePtr w_Bishop = std::make_shared<Bishop>(EPieceColor::WHITE);
-    squares[2][0]->setOccupier(w_Bishop);
-    w_Bishop = std::make_shared<Bishop>(EPieceColor::WHITE);
-    squares[5][0]->setOccupier(w_Bishop);
-
-    Piece::PiecePtr b_Bishop = std::make_shared<Bishop>(EPieceColor::BLACK);
-    squares[2][7]->setOccupier(b_Bishop);
-    b_Bishop = std::make_shared<Bishop>(EPieceColor::BLACK);
-    squares[5][7]->setOccupier(b_Bishop);
-
+    // White Bishops
+    placePiece(2, 0, EPieceType::BISHOP, EPieceColor::BLACK);
+    placePiece(5, 0, EPieceType::BISHOP, EPieceColor::BLACK);
+    // Black Bishops
+    placePiece(2, 7, EPieceType::BISHOP, EPieceColor::WHITE);
+    placePiece(5, 7, EPieceType::BISHOP, EPieceColor::WHITE);
+    // White Rooks
+    placePiece(0, 7, EPieceType::ROOK, EPieceColor::WHITE);
+    placePiece(7, 7, EPieceType::ROOK, EPieceColor::WHITE);
+    // Black Rooks
+    placePiece(0, 0, EPieceType::ROOK, EPieceColor::BLACK);
+    placePiece(7, 0, EPieceType::ROOK, EPieceColor::BLACK);
+    // White Knights
+    placePiece(1, 7, EPieceType::KNIGHT, EPieceColor::WHITE);
+    placePiece(6, 7, EPieceType::KNIGHT, EPieceColor::WHITE);
+    // Black Knights
+    placePiece(1, 0, EPieceType::KNIGHT, EPieceColor::BLACK);
+    placePiece(6, 0, EPieceType::KNIGHT, EPieceColor::BLACK);
+    // White King
+    placePiece(4, 7, EPieceType::KING, EPieceColor::WHITE);
+    // Black King
+    placePiece(4, 0, EPieceType::KING, EPieceColor::BLACK);
+    // White Queen
+    placePiece(3, 7, EPieceType::QUEEN, EPieceColor::WHITE);
+    // Black Queen
+    placePiece(3, 0, EPieceType::QUEEN, EPieceColor::BLACK);
     return true;
 }
 
-Board::BoardT &Board::getSquares() { return squares; }
+Board::BoardT &Board::getSquares() { return m_Squares; }
+
+Square::SquarePtr Board::selectSquare(sf::Vector2i squarePosition) {
+    int x = squarePosition.x / 100;
+    int y = squarePosition.y / 100;
+    return m_Squares[x][y];
+}

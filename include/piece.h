@@ -18,22 +18,22 @@ class Piece : public std::enable_shared_from_this<Piece> {
     using PiecePtr = std::shared_ptr<Piece>;
 
    protected:
-    EPieceColor _color;
-    EPieceType _type;
-    sf::Sprite _sprite;
-    std::vector<std::pair<int, int>> _moves;
-    std::shared_ptr<Square> _square;
+    EPieceColor m_Color;
+    EPieceType m_Type;
+    sf::Sprite m_Sprite;
+    std::vector<std::pair<int, int>> m_PossibleMoves;
+    std::shared_ptr<Square> m_Square;
 
    public:
     Piece(EPieceType, EPieceColor);
     virtual ~Piece() = default;
-    virtual void generateMoves() = 0;
+    void generateMoves();
     bool canMoveTo(std::shared_ptr<Square>) const;
     bool moveTo(std::shared_ptr<Square>);
+    void setSpritePosition(sf::Vector2f pos);
     EPieceColor getColor() const;
     EPieceType getType() const;
     sf::Vector2f getSpritePosition();
-    void setSpritePosition(sf::Vector2f pos);
     sf::Sprite &getSprite();
     void deOccupy();
     void setSquare(std::shared_ptr<Square>);

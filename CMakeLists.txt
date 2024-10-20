@@ -12,19 +12,15 @@ add_executable(
   src/main.cc
   src/piece.cc
   include/piece.h
-  src/piece_texture.cc
-  include/piece_texture.h
+  src/texture_factory.cc
+  include/texture_factory.h
   include/square.h
   src/square.cc
   include/restricted_piece.h
   src/engine.cc
   include/engine.h
-  src/pawn.cc
-  include/pawn.h
   src/board.cc
   include/board.h
-  src/bishop.cc
-  include/bishop.h
   src/input_handler.cc
   include/input_handler.h
   src/renderer.cc
