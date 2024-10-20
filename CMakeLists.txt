@@ -24,7 +24,11 @@ add_executable(
   src/board.cc
   include/board.h
   src/bishop.cc
-  include/bishop.h)
+  include/bishop.h
+  src/input_handler.cc
+  include/input_handler.h
+  src/renderer.cc
+  include/renderer.h)
 
 target_link_libraries(ChessEngine sfml-graphics sfml-window sfml-system
                       sfml-network)
