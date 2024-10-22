@@ -5,8 +5,6 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/System/Vector3.hpp>
 #include <memory>
-#include <set>
-#include <utility>
 
 enum class EPieceColor { BLACK, WHITE };
 enum class EPieceType { PAWN, ROOK, BISHOP, QUEEN, KING, KNIGHT };

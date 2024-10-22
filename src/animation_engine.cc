@@ -7,8 +7,6 @@
 #include <SFML/System/Time.hpp>
 #include <SFML/System/Vector2.hpp>
 #include <iostream>
-#include <memory>
-#include <utility>
 
 #include "piece.h"
 #include "renderer.h"

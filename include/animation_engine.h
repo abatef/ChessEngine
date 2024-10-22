@@ -5,7 +5,6 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/System/Vector2.hpp>
-#include <memory>
 #include <vector>
 
 // TODO https://www.sfml-dev.org/documentation/2.1/classsf_1_1RenderTexture.php
