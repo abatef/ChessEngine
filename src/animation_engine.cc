@@ -13,8 +13,12 @@
 #include "piece.h"
 #include "renderer.h"
 
-AnimationEngine::AnimationEngine(sf::RenderWindow& window)
-    : m_Window(window), m_AnimationSurface(), m_ElapsedTime(0), m_IsMoving(true) {
+AnimationEngine::AnimationEngine(Renderer& renderer)
+    : m_Window(renderer.getWindow()),
+      m_Renderer(renderer),
+      m_AnimationSurface(),
+      m_ElapsedTime(0),
+      m_IsMoving(true) {
     m_AnimationSurface.create(800, 800);
 }
 
@@ -84,7 +88,7 @@ void AnimationEngine::move(Piece::PiecePtr piece, sf::Vector2f startPos, sf::Vec
 
         // Clear the off-screen surface and window
         m_AnimationSurface.clear(sf::Color(255, 255, 255, 0));
-        m_Window.clear(sf::Color(255, 255, 255, 0));
+        m_Renderer.drawBoard(piece->m_Square->m_Board);
 
         // Draw the sprite at the new position
         m_AnimationSurface.draw(sprite);

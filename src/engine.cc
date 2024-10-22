@@ -20,13 +20,13 @@
 
 Engine::Engine()
     : m_Handler(m_Renderer.getWindow()),
-      m_AnimationEngine(m_Renderer.getWindow()),
+      m_AnimationEngine(m_Renderer),
       m_Board(std::make_shared<Board>()) {
     m_Board->init();
 }
 
 Engine::Engine(InputDispatcher handler)
-    : m_Handler(m_Renderer.getWindow()), m_AnimationEngine(m_Renderer.getWindow()) {}
+    : m_Handler(m_Renderer.getWindow()), m_AnimationEngine((m_Renderer)) {}
 
 const sf::Color GREEN_SQUARE(118, 150, 86);
 
@@ -78,10 +78,10 @@ void Engine::movePiece(Piece::PiecePtr occupier, Square::SquarePtr targetSquare)
     auto startPos = m_SelectedSquare->getPostion();
     auto targetPos = targetSquare->getPostion();
     m_SelectedSquare->clear();
-    targetSquare->setOccupier(occupier);
     occupier->setSquare(targetSquare);
     occupier->setFirstMove();
     m_AnimationEngine.move(occupier, startPos, targetPos);
+    targetSquare->setOccupier(occupier);
     deselectSquare();
 }
 
