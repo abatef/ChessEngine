@@ -4,13 +4,13 @@
 #include <SFML/System/Vector2.hpp>
 #include <algorithm>
 #include <memory>
-#include <stdexcept>
-#include <string>
 
+#include "board.h"
 #include "square.h"
 #include "texture_factory.h"
 
-Piece::Piece(EPieceType type, EPieceColor color) : m_Type(type), m_Color(color) {
+Piece::Piece(EPieceType type, EPieceColor color)
+    : m_Type(type), m_Color(color), m_IsFirstMove(false) {
     m_Sprite.setTexture(TextureFactory::getTexture(color, type));
     TextureFactory::getTexture(color, type).setSmooth(true);
     sf::Vector2u origSize = m_Sprite.getTexture()->getSize();
@@ -22,12 +22,12 @@ Piece::Piece(EPieceType type, EPieceColor color) : m_Type(type), m_Color(color) 
 EPieceColor Piece::getColor() const { return m_Color; }
 EPieceType Piece::getType() const { return m_Type; }
 
-bool Piece::canMoveTo(Square::SquarePtr square) const {
-    int x = square->getX();
-    int y = square->getY();
-    return std::any_of(m_PossibleMoves.begin(), m_PossibleMoves.end(),
-                       [&](const auto& move) { return move.first == x && move.second == y; });
-}
+// bool Piece::canMoveTo(Square::SquarePtr square) const {
+//     int x = square->getX();
+//     int y = square->getY();
+//     return std::any_of(m_PossibleMoves.begin(), m_PossibleMoves.end(),
+//                        [&](const auto& move) { return move.first == x && move.second == y; });
+// }
 
 void Piece::deOccupy() { m_Square = nullptr; }
 
@@ -52,4 +52,6 @@ sf::Vector2f Piece::getSpritePosition() { return m_Sprite.getPosition(); }
 sf::Sprite& Piece::getSprite() { return m_Sprite; }
 void Piece::setSpritePosition(sf::Vector2f pos) { m_Sprite.setPosition(pos); }
 
-void Piece::generateMoves() {}
+bool Piece::isFirstMove() const { return m_IsFirstMove; }
+
+void Piece::setFirstMove() { m_IsFirstMove = true; }

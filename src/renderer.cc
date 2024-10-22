@@ -18,13 +18,13 @@ bool Renderer::isRunning() const { return m_Window.isOpen(); }
 
 sf::RenderWindow& Renderer::getWindow() { return m_Window; }
 
-void Renderer::drawBoard(Board& board) {
+void Renderer::drawBoard(Board::BoardPtr board) {
     if (!m_DrawFlag) {
         return;
     }
 
     m_Window.clear(sf::Color::Black);
-    auto squares = board.getSquares();
+    auto squares = board->getSquares();
     sf::RectangleShape rect;
     rect.setSize(sf::Vector2f(100.f, 100.f));
     for (auto& sl : squares) {
@@ -35,12 +35,16 @@ void Renderer::drawBoard(Board& board) {
             rect.setPosition(pos);
             rect.setFillColor((s->getSquareColor() == EPieceColor::BLACK) ? sf::Color(118, 150, 86)
                                                                           : sf::Color::White);
-            if (s->isSelected()) {
+            if (s->isSelected() || s->isHighlighted()) {
                 float outlineThickness = 2.f;
                 rect.setSize(
                     sf::Vector2f(100.f - 2 * outlineThickness, 100.f - 2 * outlineThickness));
                 rect.setPosition(pos.x + outlineThickness, pos.y + outlineThickness);
-                rect.setOutlineColor(sf::Color::Red);
+                if (s->isSelected()) {
+                    rect.setOutlineColor(sf::Color::Red);
+                } else if (s->isHighlighted()) {
+                    rect.setOutlineColor(sf::Color::Blue);
+                }
                 rect.setOutlineThickness(outlineThickness);
             } else {
                 rect.setSize(sf::Vector2f(100.f, 100.f));

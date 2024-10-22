@@ -12,7 +12,7 @@ class Renderer {
    public:
     Renderer();
     void drawSquare(Square::SquarePtr);
-    void drawBoard(Board &);
+    void drawBoard(Board::BoardPtr);
     void update();
     void setDrawFlag();
     bool isRunning() const;

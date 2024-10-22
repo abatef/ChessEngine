@@ -14,6 +14,7 @@ void Board::placePiece(int x, int y, EPieceType type, EPieceColor color) {
 }
 
 bool Board::init() {
+    std::cout << "Board Init" << std::endl;
     // Initialize Empty Squares
     for (int i = 0; i < 8; i++) {
         std::vector<Square::SquarePtr> row;
@@ -21,6 +22,7 @@ bool Board::init() {
 
         for (int j = 0; j < 8; j++) {
             Square::SquarePtr sqr = std::make_shared<Square>(i, j, color);
+            sqr->setBoard(shared_from_this());
             row.push_back(sqr);
             color = (color == EPieceColor::WHITE) ? EPieceColor::BLACK : EPieceColor::WHITE;
         }
@@ -68,4 +70,8 @@ Square::SquarePtr Board::selectSquare(sf::Vector2i squarePosition) {
     int x = squarePosition.x / 100;
     int y = squarePosition.y / 100;
     return m_Squares[x][y];
+}
+
+Square::SquarePtr Board::squareAt(sf::Vector2i squareIndex) {
+    return m_Squares[squareIndex.x][squareIndex.y];
 }
