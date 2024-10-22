@@ -15,6 +15,7 @@
 #include "board.h"
 #include "input_handler.h"
 #include "piece.h"
+#include "player.h"
 #include "renderer.h"
 #include "square.h"
 
@@ -23,6 +24,11 @@ Engine::Engine()
       m_AnimationEngine(m_Renderer),
       m_Board(std::make_shared<Board>()) {
     m_Board->init();
+    Player *w_Player = new Player(EPieceColor::WHITE);
+    Player *b_Player = new Player(EPieceColor::BLACK);
+    w_Player->next = b_Player;
+    b_Player->next = w_Player;
+    m_CurrentPlayer = w_Player;
 }
 
 Engine::Engine(InputDispatcher handler)
@@ -42,10 +48,14 @@ void Engine::deselectSquare() {
 
 void Engine::selectSquare(Square::SquarePtr currentSquare) {
     if (currentSquare->isOccupied()) {
-        m_SelectedSquare = currentSquare;
-        currentSquare->select();
-        generatePossibleMoves();
-        highlightSquares();
+        if (currentSquare->getOccupier()->getColor() == m_CurrentPlayer->m_PlayerColor) {
+            m_SelectedSquare = currentSquare;
+            currentSquare->select();
+            generatePossibleMoves();
+            highlightSquares();
+            return;
+        }
+        return;
     }
 }
 
@@ -83,9 +93,14 @@ void Engine::movePiece(Piece::PiecePtr occupier, Square::SquarePtr targetSquare)
     m_AnimationEngine.move(occupier, startPos, targetPos);
     targetSquare->setOccupier(occupier);
     deselectSquare();
+    m_CurrentPlayer = m_CurrentPlayer->next;
 }
 
 void Engine::capturePiece(Piece::PiecePtr occupier, Square::SquarePtr targetSquare) {
+    if (!isLegalMove(occupier, targetSquare)) {
+        deselectSquare();
+        return;
+    }
     auto opponent = targetSquare->getOccupier();
     targetSquare->clear();
     movePiece(occupier, targetSquare);
@@ -100,7 +115,6 @@ void Engine::proccessMove(Square::SquarePtr currentSquare) {
 
     if (m_SelectedSquare->isOccupied()) {
         auto occupier = m_SelectedSquare->getOccupier();
-
         if (!currentSquare->isOccupied()) {
             movePiece(occupier, currentSquare);
         } else {
@@ -127,7 +141,6 @@ void Engine::handleInput() {
         auto currentSquare = m_Board->selectSquare(target);
         if (m_SelectedSquare == nullptr) {
             selectSquare(currentSquare);
-            return;
         } else {
             proccessMove(currentSquare);
         }
@@ -186,7 +199,6 @@ void Engine::generatePawnMoves() {
     Square::SquarePtr forwardSquare = m_SelectedSquare->m_Board->squareAt(forwardMove);
     if (!forwardSquare->isOccupied()) {
         m_PossibleMoves.insert(forwardSquare);
-        return;
     }
     Square::SquarePtr adjacentLeft =
         m_SelectedSquare->m_Board->squareAt(sf::Vector2i(forwardMove.x - 1, forwardMove.y));

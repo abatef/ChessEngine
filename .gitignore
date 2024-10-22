@@ -12,4 +12,4 @@ _deps
 CMakeUserPresets.json
 .cache
 build
-chess
+ChessEngine

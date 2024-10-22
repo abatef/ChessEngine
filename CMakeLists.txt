@@ -26,7 +26,8 @@ add_executable(
   src/renderer.cc
   include/renderer.h
   src/animation_engine.cc
-  include/animation_engine.h)
+  include/animation_engine.h
+  include/player.h)
 
 target_link_libraries(ChessEngine sfml-graphics sfml-window sfml-system
                       sfml-network)

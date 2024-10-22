@@ -9,6 +9,7 @@
 #include "board.h"
 #include "input_handler.h"
 #include "piece.h"
+#include "player.h"
 #include "renderer.h"
 #include "square.h"
 
@@ -20,6 +21,7 @@ class Engine {
     sf::Clock m_Clock;
     AnimationEngine m_AnimationEngine;
     std::set<Square::SquarePtr> m_PossibleMoves;
+    Player *m_CurrentPlayer;
     const float kMovementDuration = 3.f;
     bool m_IsMoving;
 

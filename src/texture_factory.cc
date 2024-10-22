@@ -2,7 +2,7 @@
 
 #include <SFML/Graphics/Texture.hpp>
 
-const std::string path = "./assets/textures/";
+const std::string path = "/home/abatef/workspace/ChessEngine/assets/textures/";
 
 sf::Texture &TextureFactory::getTexture(EPieceColor color, EPieceType type) {
     switch (color) {
