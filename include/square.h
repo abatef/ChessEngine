@@ -12,27 +12,27 @@ class Square : public std::enable_shared_from_this<Square> {
    public:
     using SquarePtr = std::shared_ptr<Square>;
     static const sf::Vector2f SQUARE_SIZE;
-    std::shared_ptr<Board> m_Board;
+    std::shared_ptr<Board> mBoard;
 
    private:
-    int m_X, m_Y;  // position x, y
-    bool m_IsSelected;
-    bool m_IsHighlighted;
-    Piece::PiecePtr m_Occupier;
-    EPieceColor m_SquareColor;
+    int mX, mY;  // position x, y
+    bool mIsSelected;
+    bool mIsHighlighted;
+    Piece::PiecePtr mOccupier;
+    EPieceColor mSquareColor;
 
    public:
     Square() = default;
     ~Square() = default;
-    Square(int x, int y, EPieceColor color);
+    Square(int pX, int pY, EPieceColor pColor);
     int getX() const;
     int getY() const;
     EPieceColor getSquareColor() const;
     bool isOccupied() const;
     bool isSelected() const;
     bool isHighlighted() const;
-    void setOccupier(Piece::PiecePtr occupier);
-    void setBoard(std::shared_ptr<Board>);
+    void setOccupier(Piece::PiecePtr pOccupier);
+    void setBoard(std::shared_ptr<Board> pBoard);
     Piece::PiecePtr getOccupier() const;
     void clear();
     void select();

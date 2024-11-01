@@ -5,25 +5,49 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/VideoMode.hpp>
+#include <SFML/Window/WindowStyle.hpp>
 
+#include "SFML/System/Clock.hpp"
 #include "board.h"
+#include "common.h"
 #include "piece.h"
 
-Renderer::Renderer() : m_Window(sf::VideoMode(800, 800), "Chess") {
-    //   << std::endl;
+Renderer::Renderer()
+    : mWindow(sf::VideoMode(800, 800), "Chess", sf::Style::Titlebar | sf::Style::Close) {
+    // mWindow.setFramerateLimit(60);
+#ifdef IMGUI_MODE
+    ImGui::SFML::Init(mWindow);
+#endif
 }
 
-bool Renderer::isRunning() const { return m_Window.isOpen(); }
+Renderer::~Renderer() {
+    mWindow.close();
+#ifdef IMGUI_MODE
+    ImGui::SFML::Shutdown();
+#endif
+}
 
-sf::RenderWindow& Renderer::getWindow() { return m_Window; }
+bool Renderer::isRunning() const { return mWindow.isOpen(); }
 
-void Renderer::drawBoard(Board::BoardPtr board) {
-    if (!m_DrawFlag) {
+sf::RenderWindow& Renderer::getWindow() { return mWindow; }
+sf::Clock& Renderer::getClock() { return mDeltaClock; }
+
+void Renderer::drawBoard(Board::BoardPtr pBoard, bool pAnimating) {
+#ifndef IMGUI_MODE
+    if (!mDrawFlag) {
         return;
     }
+#endif
 
-    m_Window.clear(sf::Color::Black);
-    auto squares = board->getSquares();
+    mWindow.clear(sf::Color::Black);
+
+#ifdef IMGUI_MODE
+    if (!pAnimating) {
+        ImGui::SFML::Update(mWindow, mDeltaClock.restart());
+    }
+
+#endif
+    auto squares = pBoard->getSquares();
     sf::RectangleShape rect;
     rect.setSize(sf::Vector2f(100.f, 100.f));
     for (auto& sl : squares) {
@@ -49,19 +73,24 @@ void Renderer::drawBoard(Board::BoardPtr board) {
                 rect.setSize(sf::Vector2f(100.f, 100.f));
                 rect.setOutlineThickness(0.f);
             }
-            m_Window.draw(rect);
+            mWindow.draw(rect);
             if (s->isOccupied()) {
                 s->getOccupier()->getSprite().setPosition(pos);
-                m_Window.draw(s->getOccupier()->getSprite());
+                mWindow.draw(s->getOccupier()->getSprite());
             }
         }
     }
 }
 
 void Renderer::update() {
-    if (!m_DrawFlag) {
+#ifndef IMGUI_MODE
+    if (!mDrawFlag) {
         return;
     }
-    m_Window.display();
-    m_DrawFlag = false;
+#endif
+#ifdef IMGUI_MODE
+    ImGui::SFML::Render(mWindow);
+#endif
+    mWindow.display();
+    mDrawFlag = false;
 }

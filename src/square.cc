@@ -1,53 +1,56 @@
 #include "square.h"
 
 #include <SFML/System/Vector2.hpp>
-#include <iostream>
 #include <memory>
 
 #include "piece.h"
 
 const sf::Vector2f Square::SQUARE_SIZE{100, 100};
 
-Square::Square(int x, int y, EPieceColor color)
-    : m_X(x), m_Y(y), m_IsSelected(false), m_SquareColor(color), m_IsHighlighted(false) {}
+Square::Square(int pX, int pY, EPieceColor pColor)
+    : mX(pX)
+    , mY(pY)
+    , mIsSelected(false)
+    , mSquareColor(pColor)
+    , mIsHighlighted(false) {}
 
-int Square::getX() const { return m_X; }
-int Square::getY() const { return m_Y; }
+int Square::getX() const { return mX; }
+int Square::getY() const { return mY; }
 
 bool Square::isOccupied() const {
     // std::cout << "Occupied" << std::endl;
-    return static_cast<bool>(m_Occupier);
+    return static_cast<bool>(mOccupier);
 }
-void Square::setOccupier(Piece::PiecePtr occupier) {
-    if (m_Occupier) {
-        m_Occupier->deOccupy();
+void Square::setOccupier(Piece::PiecePtr pOccupier) {
+    if (mOccupier) {
+        mOccupier->deOccupy();
     }
-    m_Occupier = occupier;
+    mOccupier = pOccupier;
 };
 
-Piece::PiecePtr Square::getOccupier() const { return m_Occupier; }
+Piece::PiecePtr Square::getOccupier() const { return mOccupier; }
 
 void Square::clear() {
-    if (m_Occupier) {
-        m_Occupier->deOccupy();
-        m_Occupier = nullptr;
+    if (mOccupier) {
+        mOccupier->deOccupy();
+        mOccupier = nullptr;
     }
 }
 
-EPieceColor Square::getSquareColor() const { return m_SquareColor; }
+EPieceColor Square::getSquareColor() const { return mSquareColor; }
 
-bool Square::isSelected() const { return m_IsSelected; }
+bool Square::isSelected() const { return mIsSelected; }
 
-void Square::select() { m_IsSelected = true; }
+void Square::select() { mIsSelected = true; }
 
-void Square::deSelect() { m_IsSelected = false; }
+void Square::deSelect() { mIsSelected = false; }
 
-sf::Vector2f Square::getPostion() const { return sf::Vector2f(float(m_X), float(m_Y)); }
+sf::Vector2f Square::getPostion() const { return sf::Vector2f(float(mX), float(mY)); }
 
-bool Square::isHighlighted() const { return m_IsHighlighted; }
+bool Square::isHighlighted() const { return mIsHighlighted; }
 
-void Square::highlight() { m_IsHighlighted = true; }
+void Square::highlight() { mIsHighlighted = true; }
 
-void Square::clearHighlight() { m_IsHighlighted = false; }
+void Square::clearHighlight() { mIsHighlighted = false; }
 
-void Square::setBoard(std::shared_ptr<Board> board) { m_Board = board; }
+void Square::setBoard(std::shared_ptr<Board> pBoard) { mBoard = pBoard; }

@@ -7,24 +7,23 @@
 #include <SFML/System/Vector2.hpp>
 #include <vector>
 
-// TODO https://www.sfml-dev.org/documentation/2.1/classsf_1_1RenderTexture.php
-
 #include "piece.h"
 #include "renderer.h"
+
 class AnimationEngine {
    private:
-    sf::RenderWindow& m_Window;
-    sf::RenderTexture m_AnimationSurface;
-    Renderer& m_Renderer;
-    sf::Clock m_Clock;
-    bool m_IsMoving;
-    const float kMovementDuration = 3.f;
-    float m_ElapsedTime;
-    std::vector<sf::Vector2f> plotLine(sf::Vector2f start, sf::Vector2f end);
+    sf::RenderWindow& mWindow;
+    sf::RenderTexture mAnimationSurface;
+    Renderer& mRenderer;
+    sf::Clock mClock;
+    bool mIsMoving;
+    const float kMovementDuration = 0.0001f;
+    const float kStepFactor = 0.7f;
+    std::vector<sf::Vector2f> plotLine(sf::Vector2f pStart, sf::Vector2f pEnd);
 
    public:
-    AnimationEngine(Renderer&);
-    void move(Piece::PiecePtr, sf::Vector2f, sf::Vector2f);
+    AnimationEngine(Renderer& pRenderer);
+    void animateMovement(Piece::PiecePtr pPiece, sf::Vector2f pSource, sf::Vector2f pTarget);
     bool isMoving() const;
 };
 

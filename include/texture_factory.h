@@ -10,28 +10,28 @@
 class TextureFactory {
    public:
     // Static texture variables for each chess piece
-    static sf::Texture white_pawn_;
-    static sf::Texture white_rook_;
-    static sf::Texture white_knight_;
-    static sf::Texture white_bishop_;
-    static sf::Texture white_queen_;
-    static sf::Texture white_king_;
-    static sf::Texture black_pawn_;
-    static sf::Texture black_rook_;
-    static sf::Texture black_knight_;
-    static sf::Texture black_bishop_;
-    static sf::Texture black_queen_;
-    static sf::Texture black_king_;
+    static sf::Texture mWhitePawn;
+    static sf::Texture mWhiteRook;
+    static sf::Texture mWhiteKnight;
+    static sf::Texture mWhiteBishop;
+    static sf::Texture mWhiteQueen;
+    static sf::Texture mWhiteKing;
+    static sf::Texture mBlackPawn;
+    static sf::Texture mBlackRook;
+    static sf::Texture mBlackKnight;
+    static sf::Texture mBlackBishop;
+    static sf::Texture mBlackQueen;
+    static sf::Texture mBlackKing;
 
-    static sf::Texture LoadTexture(const std::string &path) {
+    static sf::Texture LoadTexture(const std::string &pPath) {
         sf::Texture texture;
-        if (!texture.loadFromFile(path)) {
-            std::cerr << "Failed to load texture from: " << path << std::endl;
+        if (!texture.loadFromFile(pPath)) {
+            std::cerr << "Failed to load texture from: " << pPath << std::endl;
         }
         return texture;
     }
 
-    static sf::Texture &getTexture(EPieceColor color, EPieceType type);
+    static sf::Texture &getTexture(EPieceColor pColor, EPieceType pType);
 };
 
 #endif  // _PIECE_TEXTURE_H_

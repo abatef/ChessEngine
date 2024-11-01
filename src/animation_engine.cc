@@ -8,97 +8,93 @@
 #include <SFML/System/Vector2.hpp>
 #include <iostream>
 
+#include "common.h"
+#include "imgui-SFML.h"
+#include "imgui.h"
 #include "piece.h"
 #include "renderer.h"
 
-AnimationEngine::AnimationEngine(Renderer& renderer)
-    : m_Window(renderer.getWindow()),
-      m_Renderer(renderer),
-      m_AnimationSurface(),
-      m_ElapsedTime(0),
-      m_IsMoving(true) {
-    m_AnimationSurface.create(800, 800);
+AnimationEngine::AnimationEngine(Renderer &pRenderer)
+    : mWindow(pRenderer.getWindow())
+    , mRenderer(pRenderer)
+    , mAnimationSurface()
+    , mIsMoving(true) {
+    mAnimationSurface.create(800, 800);
 }
 
-std::vector<sf::Vector2f> AnimationEngine::plotLine(sf::Vector2f start, sf::Vector2f end) {
+std::vector<sf::Vector2f> AnimationEngine::plotLine(sf::Vector2f pStart, sf::Vector2f pEnd) {
     std::vector<sf::Vector2f> points{};
 
-    float dx = end.x - start.x;
-    float dy = end.y - start.y;
+    float dx = pEnd.x - pStart.x;
+    float dy = pEnd.y - pStart.y;
 
     // If the line is vertical
     if (dx == 0) {
-        float step = (end.y > start.y) ? 0.7f : -0.7f;
-        for (float y = start.y; (step > 0 ? y <= end.y : y >= end.y); y += step) {
-            points.push_back(sf::Vector2f(start.x, y));
+        float step = (pEnd.y > pStart.y) ? kStepFactor : -kStepFactor;
+        for (float y = pStart.y; (step > 0 ? y <= pEnd.y : y >= pEnd.y); y += step) {
+            points.push_back(sf::Vector2f(pStart.x, y));
         }
     }
     // If the line is horizontal
     else if (dy == 0) {
-        float step = (end.x > start.x) ? 0.7f : -0.7f;
-        for (float x = start.x; (step > 0 ? x <= end.x : x >= end.x); x += step) {
-            points.push_back(sf::Vector2f(x, start.y));
+        float step = (pEnd.x > pStart.x) ? kStepFactor : -kStepFactor;
+        for (float x = pStart.x; (step > 0 ? x <= pEnd.x : x >= pEnd.x); x += step) {
+            points.push_back(sf::Vector2f(x, pStart.y));
         }
     }
     // General case (diagonal)
     else {
         float slope = dy / dx;
-        float step = (end.x > start.x) ? 0.7f : -0.7f;
+        float step = (pEnd.x > pStart.x) ? kStepFactor : -kStepFactor;
 
-        for (float x = start.x; (step > 0 ? x <= end.x : x >= end.x); x += step) {
-            float y = start.y + slope * (x - start.x);
+        for (float x = pStart.x; (step > 0 ? x <= pEnd.x : x >= pEnd.x); x += step) {
+            float y = pStart.y + slope * (x - pStart.x);
             points.push_back(sf::Vector2f(x, y));
         }
     }
 
-    std::cout << "Points: " << points.size() << std::endl;
-
-    return points;
+    return std::move(points);
 }
 
-void AnimationEngine::move(Piece::PiecePtr piece, sf::Vector2f startPos, sf::Vector2f targetPos) {
-    std::cout << "Animating" << std::endl;
-
+void AnimationEngine::animateMovement(Piece::PiecePtr pPiece, sf::Vector2f pSource,
+                                      sf::Vector2f pTarget) {
     // Generate the points along the line from start to target
-    auto points = plotLine(startPos * 100.f, targetPos * 100.f);
+    auto points = plotLine(pSource * 100.f, pTarget * 100.f);
 
     // Retrieve the sprite to animate
-    auto sprite = piece->getSprite();
+    auto sprite = pPiece->getSprite();
 
     // Setup clock for timing the animation
-    sf::Clock clock;
+    mClock.restart();
     float animationTime = 0.f;
     size_t currentPointIndex = 0;
 
     // Start the animation loop
     while (currentPointIndex < points.size()) {
-        float deltaTime = clock.restart().asSeconds();
-        animationTime += deltaTime;
-
+        float deltaTime = mClock.restart().asSeconds();
+        animationTime += deltaTime;  // the time passed since last move
+        // ImGui::SFML::Update(mRenderer.getWindow(), mRenderer.getClock().restart());
         // Check if enough time has passed to move to the next point
-        if (animationTime >= 0.0001f) {  // Adjust 0.01f for speed
+        // ImGui::Text("Piece: %s", pPiece->getName().c_str());
+        if (animationTime >= kMovementDuration) {
             // Get the current point to move to
-            auto [x, y] = points[currentPointIndex];
+            auto &[x, y] = points[currentPointIndex];
             sprite.setPosition(x, y);
             currentPointIndex++;
             animationTime = 0.f;  // Reset animation timer
         }
-
         // Clear the off-screen surface and window
-        m_AnimationSurface.clear(sf::Color(255, 255, 255, 0));
-        m_Renderer.drawBoard(piece->m_Square->m_Board);
-
+        mAnimationSurface.clear(sf::Color(255, 255, 255, 0));
+        mRenderer.drawBoard(pPiece->mSquare->mBoard, true);
+        // ImGui::SFML::Update(mRenderer.getWindow(), mRenderer.getClock().restart());
         // Draw the sprite at the new position
-        m_AnimationSurface.draw(sprite);
-        m_AnimationSurface.display();
+        mAnimationSurface.draw(sprite);
+        mAnimationSurface.display();
 
         // Draw the animation surface onto the window
-        m_Window.draw(sf::Sprite(m_AnimationSurface.getTexture()));
-        m_Window.display();
-
-        // Sleep for a short time to control the frame rate
-        // sf::sleep(sf::milliseconds(10));
+        mWindow.draw(sf::Sprite(mAnimationSurface.getTexture()));
+        mWindow.display();
     }
 }
 
-bool AnimationEngine::isMoving() const { return m_IsMoving; }
+bool AnimationEngine::isMoving() const { return mIsMoving; }

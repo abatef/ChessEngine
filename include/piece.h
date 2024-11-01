@@ -14,27 +14,26 @@ class Square;
 class Piece : public std::enable_shared_from_this<Piece> {
    public:
     using PiecePtr = std::shared_ptr<Piece>;
-    std::shared_ptr<Square> m_Square;
+    std::shared_ptr<Square> mSquare;
 
-   protected:
-    EPieceColor m_Color;
-    EPieceType m_Type;
-    sf::Sprite m_Sprite;
-    bool m_IsFirstMove;
+    EPieceColor mColor;
+    EPieceType mType;
+    sf::Sprite mSprite;
+    bool mMovedBefore;
 
    public:
-    Piece(EPieceType, EPieceColor);
+    Piece(EPieceType pType, EPieceColor pColor);
     virtual ~Piece() = default;
-    bool moveTo(std::shared_ptr<Square>);
-    bool isFirstMove() const;
+    bool movedBefore() const;
     void setFirstMove();
-    void setSpritePosition(sf::Vector2f pos);
+    void setSpritePosition(sf::Vector2f pPosition);
     EPieceColor getColor() const;
     EPieceType getType() const;
     sf::Vector2f getSpritePosition();
     sf::Sprite &getSprite();
     void deOccupy();
-    void setSquare(std::shared_ptr<Square>);
+    void setSquare(std::shared_ptr<Square> pSquare);
+    std::string getName() const;
 };
 
 #endif

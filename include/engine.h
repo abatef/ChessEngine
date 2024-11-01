@@ -4,53 +4,88 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <set>
+#include <stack>
+#include <vector>
 
 #include "animation_engine.h"
 #include "board.h"
+#include "common.h"
 #include "input_handler.h"
 #include "piece.h"
-#include "player.h"
 #include "renderer.h"
 #include "square.h"
 
+enum class GameMode { SINGLE, ONLINE, LOCAL };
+
+struct Move {
+    Piece::PiecePtr mOccupier = nullptr;
+    Piece::PiecePtr mOpponent = nullptr;
+    Square::SquarePtr mFrom = nullptr;
+    Square::SquarePtr mTo = nullptr;
+    bool mFirstMove;
+    Move() = default;
+    Move(Piece::PiecePtr pPiece, Piece::PiecePtr pOpponent, Square::SquarePtr pFrom,
+         Square::SquarePtr pTo);
+};
+
+struct Player {
+    Player() = default;
+    Player(EPieceColor color)
+        : mPlayerColor(color) {}
+    EPieceColor mPlayerColor;
+    Player* mNext;
+};
+
 class Engine {
    private:
-    Renderer m_Renderer;
-    InputDispatcher m_Handler;
-    Board::BoardPtr m_Board;
-    sf::Clock m_Clock;
-    AnimationEngine m_AnimationEngine;
-    std::set<Square::SquarePtr> m_PossibleMoves;
-    Player *m_CurrentPlayer;
+    Renderer mRenderer;
+    InputDispatcher mInputDispatcher;
+    Board::BoardPtr mBoard;
+    sf::Clock mClock;
+    AnimationEngine mAnimationEngine;
+    std::set<Square::SquarePtr> mLegalMoves;
+    GameMode mGameMode;
+    std::stack<Move> mMoveHistory;
+    Player* mCurrentPlayer;
     const float kMovementDuration = 3.f;
-    bool m_IsMoving;
 
    private:
-    void generatePawnMoves();
-    void generateBishopMoves();
-    void generateKnightMoves();
-    void generateKingMoves();
-    void generateQueenMoves();
-    void generateRookMoves();
-    void generateUsingCoords(std::vector<std::pair<int, int>> coords);
+    void generatePawnMoves(Piece::PiecePtr pPiece);
+    void generateBishopMoves(Piece::PiecePtr pPiece);
+    void generateKnightMoves(Piece::PiecePtr pPiece);
+    void generateKingMoves(Piece::PiecePtr pPiece);
+    void generateQueenMoves(Piece::PiecePtr pPiece);
+    void generateRookMoves(Piece::PiecePtr pPiece);
+    void generateUsingCoords(Piece::PiecePtr pPiece, std::vector<std::pair<int, int>> pCoords);
+    void switchPlayers();
+    void makeMove(Move pMove);
+    void undoMove();
+    std::vector<Move> generateAllPossibleMoves(EPieceColor pPieceColor);
+    int getPieceValue(EPieceType pType) const;
+    int evaluateBoard() const;
+    int minimax(int pDepth, int pAlpha, int pBeta, bool pIsMaximizing);
+    void makeBestMove();
+#ifdef IMGUI_MODE
+    void handleImGui();
+#endif
 
    public:
     Engine();
-    Engine(InputDispatcher input);
+    Engine(InputDispatcher pInput);
     void handleInput();
     void loop();
-    void selectSquare(Square::SquarePtr square);
-    void proccessMove(Square::SquarePtr square);
-    void movePiece(Piece::PiecePtr occupier, Square::SquarePtr targetSquare);
-    void capturePiece(Piece::PiecePtr occupier, Square::SquarePtr targetSquare);
-    void switchSelection(Square::SquarePtr currentSquare);
+    void selectSquare(Square::SquarePtr pSquare);
+    void proccessMove(Square::SquarePtr pSquare);
+    void movePiece(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSquare);
+    void capturePiece(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSquare);
+    void switchSelection(Square::SquarePtr pCurrentSquare);
     void deselectSquare();
-    void generatePossibleMoves();
+    void generatePossibleMoves(Piece::PiecePtr pPiece);
     void clearHighlights();
     void highlightSquares();
-    bool isLegalMove(Piece::PiecePtr, Square::SquarePtr);
+    bool isLegalMove(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSquare);
 
-    static Square::SquarePtr m_SelectedSquare;
+    static Square::SquarePtr mSelectedSquare;
 };
 
 #endif

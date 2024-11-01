@@ -7,19 +7,23 @@
 enum class ActionType { NONE, PRESS, ENGINE };
 
 typedef struct InputObject {
-    ActionType type = ActionType::NONE;
+    ActionType mType = ActionType::NONE;
     union action {
-        sf::Vector2i target;
+        sf::Vector2i mTarget;
     } action;
 } InputObject;
 
 class InputDispatcher {
    private:
-    sf::RenderWindow &m_Window;
+    sf::RenderWindow &mWindow;
+    bool mLocalInputEnabled;
 
    public:
-    InputDispatcher(sf::RenderWindow &window);
+    InputDispatcher(sf::RenderWindow &pWindow);
     InputObject captureInput();
+    void enableLocalInput();
+    void disableLocalInput();
+    bool isLocalInputEnabled() const;
 };
 
 #endif

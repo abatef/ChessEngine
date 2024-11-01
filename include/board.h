@@ -7,19 +7,27 @@
 
 #include "piece.h"
 #include "square.h"
+
 class Board : public std::enable_shared_from_this<Board> {
    public:
-    using BoardT = std::vector<std::vector<Square::SquarePtr>>;
+    using BoardSquares = std::vector<std::vector<Square::SquarePtr>>;
     using BoardPtr = std::shared_ptr<Board>;
+    using BoardPieces = std::vector<Piece::PiecePtr>;
+
+   public:
     Board() = default;
     bool init();
-    BoardT &getSquares();
-    void placePiece(int x, int y, EPieceType, EPieceColor);
-    Square::SquarePtr selectSquare(sf::Vector2i);
-    Square::SquarePtr squareAt(sf::Vector2i);
+    BoardSquares &getSquares();
+    BoardPieces &getPieces();
+    Square::SquarePtr selectSquare(sf::Vector2i pSquarePosition);
+    Square::SquarePtr squareAt(sf::Vector2i pSquarePosition);
 
    private:
-    BoardT m_Squares;
+    void placePiece(int pX, int pY, EPieceType pType, EPieceColor pColor);
+
+   private:
+    BoardSquares mSquares;
+    BoardPieces mPieces;
 };
 
 #endif

@@ -8,9 +8,11 @@
 #include "piece.h"
 #include "square.h"
 
-void Board::placePiece(int x, int y, EPieceType type, EPieceColor color) {
-    Piece::PiecePtr piece = std::make_shared<Piece>(type, color);
-    m_Squares[x][y]->setOccupier(piece);
+void Board::placePiece(int pX, int pY, EPieceType pType, EPieceColor pColor) {
+    Piece::PiecePtr piece = std::make_shared<Piece>(pType, pColor);
+    mSquares[pX][pY]->setOccupier(piece);
+    piece->setSquare(mSquares[pX][pY]);
+    mPieces.push_back(piece);
 }
 
 bool Board::init() {
@@ -27,7 +29,7 @@ bool Board::init() {
             color = (color == EPieceColor::WHITE) ? EPieceColor::BLACK : EPieceColor::WHITE;
         }
 
-        m_Squares.push_back(row);
+        mSquares.push_back(row);
     }
     // Initial Pieces Positions
     // PAWNS
@@ -64,14 +66,15 @@ bool Board::init() {
     return true;
 }
 
-Board::BoardT &Board::getSquares() { return m_Squares; }
+Board::BoardSquares &Board::getSquares() { return mSquares; }
+Board::BoardPieces &Board::getPieces() { return mPieces; }
 
-Square::SquarePtr Board::selectSquare(sf::Vector2i squarePosition) {
-    int x = squarePosition.x / 100;
-    int y = squarePosition.y / 100;
-    return m_Squares[x][y];
+Square::SquarePtr Board::selectSquare(sf::Vector2i pSquarePosition) {
+    int x = pSquarePosition.x / 100;
+    int y = pSquarePosition.y / 100;
+    return mSquares[x][y];
 }
 
-Square::SquarePtr Board::squareAt(sf::Vector2i squareIndex) {
-    return m_Squares[squareIndex.x][squareIndex.y];
+Square::SquarePtr Board::squareAt(sf::Vector2i pSquarePosition) {
+    return mSquares[pSquarePosition.x][pSquarePosition.y];
 }
