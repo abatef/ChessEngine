@@ -6,11 +6,9 @@
 #include <SFML/System/Sleep.hpp>
 #include <SFML/System/Time.hpp>
 #include <SFML/System/Vector2.hpp>
-#include <iostream>
 
 #include "common.h"
 #include "imgui-SFML.h"
-#include "imgui.h"
 #include "piece.h"
 #include "renderer.h"
 

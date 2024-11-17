@@ -6,10 +6,12 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/VideoMode.hpp>
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include <memory>
 #include <ostream>
+#include <random>
 #include <stack>
 #include <string>
 #include <utility>
@@ -33,7 +35,8 @@ Engine::Engine()
     : mInputDispatcher(mRenderer.getWindow())
     , mAnimationEngine(mRenderer)
     , mBoard(std::make_shared<Board>())
-    , mGameMode(GameMode::SINGLE) {
+    , mGameMode(GameMode::SINGLE)
+    , rng(rd()) {
     mBoard->init();
     Player *wPlayer = new Player(EPieceColor::WHITE);
     Player *bPlayer = new Player(EPieceColor::BLACK);
@@ -136,10 +139,31 @@ void Engine::capturePiece(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSq
         deselectSquare();
         return;
     }
-    auto opponent = pTargetSquare->getOccupier();
+    Square::SquarePtr tempTargetSquare = pTargetSquare;
+    bool isEnPassantMove = false;
+    if (pOccupier->mType == EPieceType::PAWN) {
+        Square::SquarePtr enPassant = Engine::isEnPassant(pOccupier);
+        if (pTargetSquare == enPassant) {
+            isEnPassantMove = true;
+            int x = pTargetSquare->getX();
+            int y = pTargetSquare->getY();
+            int v;
+            if (pOccupier->mColor == EPieceColor::WHITE) {
+                v = -1;
+            } else {
+                v = 1;
+            }
+            pTargetSquare = pTargetSquare->mBoard->squareAt({x, y + v});
+            mLegalMoves.insert(pTargetSquare);
+        }
+    }
+    auto opponent = tempTargetSquare->getOccupier();
     Move move(pOccupier, opponent, pOccupier->mSquare, pTargetSquare);
+    if (isEnPassantMove) {
+        move.mMoveType = MoveType::EN_PASSANT;
+    }
     mMoveHistory.push(move);
-    pTargetSquare->clear();
+    tempTargetSquare->clear();
     movePiece(pOccupier, pTargetSquare);
     opponent->deOccupy();
 }
@@ -264,6 +288,33 @@ void Engine::generatePawnMoves(Piece::PiecePtr pPiece) {
             }
         }
     }
+    Square::SquarePtr enPassant = Engine::isEnPassant(pPiece);
+    if (enPassant) {
+        mLegalMoves.insert(enPassant);
+    }
+}
+
+Square::SquarePtr Engine::isEnPassant(Piece::PiecePtr pPawn) {
+    sf::Vector2f pos = pPawn->mSquare->getPostion();
+    Square::SquarePtr adjLeft = mBoard->squareAt({int(pos.x - 1), int(pos.y)});
+    Square::SquarePtr adjRight = mBoard->squareAt({int(pos.x + 1), int(pos.y)});
+    if (pPawn->mSquare->getY() == 3 || pPawn->mSquare->getY() == 4) {
+        if ((adjRight && adjRight->isOccupied()) || (adjLeft && adjLeft->isOccupied())) {
+            Move m = mMoveHistory.top();
+            if (m.mOccupier->mType != EPieceType::PAWN) {
+                return nullptr;
+            }
+            int nSquares = std::abs(m.mFrom->getY() - m.mTo->getY());
+            if ((m.mTo == adjLeft || m.mTo == adjRight) && nSquares == 2) {
+                if (m.mTo == adjLeft) {
+                    return adjLeft;
+                } else if (m.mTo == adjRight) {
+                    return adjRight;
+                }
+            }
+        }
+    }
+    return nullptr;
 }
 
 void Engine::generateUsingCoords(Piece::PiecePtr pPiece, std::vector<std::pair<int, int>> pCoords) {
@@ -511,10 +562,13 @@ std::vector<Move> Engine::generateAllPossibleMoves(EPieceColor pPieceColor) {
             generatePossibleMoves(p);
             for (auto &s : mLegalMoves) {
                 Piece::PiecePtr opponent = nullptr;
+                Move move(p, opponent, p->mSquare, s);
                 if (s->isOccupied()) {
                     opponent = s->getOccupier();
+                    move.mMoveType = MoveType::CAPTURE;
                 }
-                moves.emplace_back(p, opponent, p->mSquare, s);
+                move.mOpponent = opponent;
+                moves.push_back(move);
             }
             mLegalMoves.clear();
         }
@@ -536,15 +590,31 @@ int Engine::getPieceValue(EPieceType pType) const {
 
 int Engine::evaluateBoard() const {
     int score = 0;
+    // Material evaluation
     for (auto &p : mBoard->getPieces()) {
         if (p->mSquare) {
             int pieceValue = getPieceValue(p->getType());
             score += (p->getColor() == EPieceColor::WHITE) ? pieceValue : -pieceValue;
+
+            // Pawn advancement bonus
+            if (p->getType() == EPieceType::PAWN) {
+                int rank = p->mSquare->getY();
+                score += (p->getColor() == EPieceColor::WHITE ? rank : 7 - rank) * 10;
+            }
+
+            // Position-based evaluation
+            if (p->getType() == EPieceType::KNIGHT || p->getType() == EPieceType::BISHOP) {
+                // Bonus for developed pieces
+                int rank = p->mSquare->getY();
+                int file = p->mSquare->getX();
+                int centerDistance = std::abs(3.5 - file) + std::abs(3.5 - rank);
+                int developmentBonus = (8 - centerDistance) * 5;
+                score +=
+                    (p->getColor() == EPieceColor::WHITE) ? developmentBonus : -developmentBonus;
+            }
         }
     }
-    // if (score != 0) {
-    //     std::cout << "Total Score: " << score << std::endl;
-    // }
+
     return score;
 }
 
@@ -611,36 +681,41 @@ int Engine::minimax(int pDepth, int pAlpha, int pBeta, bool pIsMaximizing) {
     if (pDepth == 0) {
         return evaluateBoard();
     }
+
+    std::vector<Move> moves =
+        generateAllPossibleMoves(pIsMaximizing ? EPieceColor::WHITE : EPieceColor::BLACK);
+
+    // Sort moves to improve alpha-beta pruning
+    std::sort(moves.begin(), moves.end(), [&](const Move &m1, const Move &m2) {
+        if (m1.mMoveType == MoveType::CAPTURE && m2.mMoveType != MoveType::CAPTURE) return true;
+        if (m1.mMoveType == MoveType::CAPTURE && m2.mMoveType == MoveType::CAPTURE) {
+            return getPieceValue(m1.mOpponent->getType()) > getPieceValue(m2.mOpponent->getType());
+        }
+        return false;
+    });
+
     if (pIsMaximizing) {
         int maxEval = -100000;
-        auto possibleMoves = generateAllPossibleMoves(EPieceColor::WHITE);
-        for (auto &move : possibleMoves) {
+        for (auto &move : moves) {
             makeMove(move);
             int eval = minimax(pDepth - 1, pAlpha, pBeta, false);
             undoMove();
+
             maxEval = std::max(maxEval, eval);
-            // std::cout << "MAX: " << maxEval << std::endl;
             pAlpha = std::max(pAlpha, eval);
-            if (pBeta <= pAlpha) {
-                break;
-            }
+            if (pBeta <= pAlpha) break;
         }
         return maxEval;
     } else {
         int minEval = 100000;
-        auto possibleMoves = generateAllPossibleMoves(EPieceColor::BLACK);
-        for (auto &move : possibleMoves) {
+        for (auto &move : moves) {
             makeMove(move);
             int eval = minimax(pDepth - 1, pAlpha, pBeta, true);
             undoMove();
 
             minEval = std::min(minEval, eval);
-            // std::cout << "MIN: " << minEval << std::endl;
-
             pBeta = std::min(pBeta, eval);
-            if (pBeta <= pAlpha) {
-                break;
-            }
+            if (pBeta <= pAlpha) break;
         }
         return minEval;
     }
@@ -650,13 +725,54 @@ void Engine::makeBestMove() {
     int bestMoveValue = -100000;
     Move bestMove;
     auto possibleMoves = generateAllPossibleMoves(EPieceColor::BLACK);
+    std::vector<Move> moves;
+
     for (auto &move : possibleMoves) {
         makeMove(move);
         int moveValue = minimax(3, -100000, 100000, false);
+
+        // Add capture bonus BEFORE comparison
+        if (move.mMoveType == MoveType::CAPTURE) {
+            moveValue +=
+                getPieceValue(move.mOpponent->getType()) * 2;  // Increase capture incentive
+        }
+
         undoMove();
+
         if (moveValue > bestMoveValue) {
+            moves.clear();
+            moves.push_back(move);
             bestMoveValue = moveValue;
             bestMove = move;
+        } else if (moveValue == bestMoveValue) {
+            moves.push_back(move);
+        }
+    }
+
+    if (!moves.empty()) {
+        // Prioritize captures and higher-value captures
+        std::sort(moves.begin(), moves.end(), [&](const Move &m1, const Move &m2) {
+            // First priority: captures vs non-captures
+            if (m1.mMoveType == MoveType::CAPTURE && m2.mMoveType != MoveType::CAPTURE) return true;
+            if (m1.mMoveType != MoveType::CAPTURE && m2.mMoveType == MoveType::CAPTURE)
+                return false;
+
+            // Second priority: value of captured piece
+            if (m1.mMoveType == MoveType::CAPTURE && m2.mMoveType == MoveType::CAPTURE) {
+                return getPieceValue(m1.mOpponent->getType()) >
+                       getPieceValue(m2.mOpponent->getType());
+            }
+
+            // For non-captures, maintain some randomness
+            return false;
+        });
+
+        // Select best capture if available, otherwise random move
+        if (moves[0].mMoveType == MoveType::CAPTURE) {
+            bestMove = moves[0];  // Take the highest-value capture
+        } else {
+            std::uniform_int_distribution<> dist(0, moves.size() - 1);
+            bestMove = moves[dist(rng)];
         }
     }
     bestMove.mFrom->clear();
@@ -664,7 +780,7 @@ void Engine::makeBestMove() {
     mAnimationEngine.animateMovement(bestMove.mOccupier, bestMove.mFrom->getPostion(),
                                      bestMove.mTo->getPostion());
     bestMove.mFrom->setOccupier(bestMove.mOccupier);
-    return makeMove(bestMove);
+    makeMove(bestMove);
 }
 
 Move::Move(Piece::PiecePtr pPiece, Piece::PiecePtr pOpponent, Square::SquarePtr pFrom,

@@ -29,5 +29,12 @@ add_executable(
 
 add_subdirectory(dependencies)
 
-target_link_libraries(ChessEngine sfml-graphics sfml-window sfml-system
-                      sfml-network ImGui-SFML::ImGui-SFML)
+target_link_libraries(ChessEngine ImGui-SFML::ImGui-SFML)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_definitions(ChessEngine PRIVATE IMGUI_MODE)
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  target_compile_options(ChessEngine PRIVATE -O3)
+endif()

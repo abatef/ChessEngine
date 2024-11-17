@@ -1,7 +1,6 @@
 #include "board.h"
 
 #include <SFML/System/Vector2.hpp>
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -16,7 +15,6 @@ void Board::placePiece(int pX, int pY, EPieceType pType, EPieceColor pColor) {
 }
 
 bool Board::init() {
-    std::cout << "Board Init" << std::endl;
     // Initialize Empty Squares
     for (int i = 0; i < 8; i++) {
         std::vector<Square::SquarePtr> row;
@@ -76,5 +74,9 @@ Square::SquarePtr Board::selectSquare(sf::Vector2i pSquarePosition) {
 }
 
 Square::SquarePtr Board::squareAt(sf::Vector2i pSquarePosition) {
+    if (pSquarePosition.x > 7 || pSquarePosition.x < 0 || pSquarePosition.y > 7 ||
+        pSquarePosition.y < 0) {
+        return nullptr;
+    }
     return mSquares[pSquarePosition.x][pSquarePosition.y];
 }

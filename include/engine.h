@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
+#include <random>
 #include <set>
 #include <stack>
 #include <vector>
@@ -17,11 +18,14 @@
 
 enum class GameMode { SINGLE, ONLINE, LOCAL };
 
+enum class MoveType { NORMAL, CAPTURE, EN_PASSANT };
+
 struct Move {
     Piece::PiecePtr mOccupier = nullptr;
     Piece::PiecePtr mOpponent = nullptr;
     Square::SquarePtr mFrom = nullptr;
     Square::SquarePtr mTo = nullptr;
+    MoveType mMoveType = MoveType::NORMAL;
     bool mFirstMove;
     Move() = default;
     Move(Piece::PiecePtr pPiece, Piece::PiecePtr pOpponent, Square::SquarePtr pFrom,
@@ -47,10 +51,13 @@ class Engine {
     GameMode mGameMode;
     std::stack<Move> mMoveHistory;
     Player* mCurrentPlayer;
+    std::random_device rd;
+    std::mt19937 rng;
     const float kMovementDuration = 3.f;
 
    private:
     void generatePawnMoves(Piece::PiecePtr pPiece);
+    Square::SquarePtr isEnPassant(Piece::PiecePtr pPawn);
     void generateBishopMoves(Piece::PiecePtr pPiece);
     void generateKnightMoves(Piece::PiecePtr pPiece);
     void generateKingMoves(Piece::PiecePtr pPiece);
