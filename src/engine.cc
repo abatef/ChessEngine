@@ -218,76 +218,45 @@ void Engine::generatePossibleMoves(Piece::PiecePtr pPiece) {
     }
 }
 
-// TODO: implement en passant
 void Engine::generatePawnMoves(Piece::PiecePtr pPiece) {
     sf::Vector2f position = pPiece->mSquare->getPostion();
     EPieceColor pieceColor = pPiece->getColor();
-    if (!pPiece->mMovedBefore) {
-        if (pieceColor == EPieceColor::WHITE) {
-            if (position.y - 1 >= 0) {
-                auto s =
-                    pPiece->mSquare->mBoard->squareAt(sf::Vector2i(position.x, position.y - 1));
-                if (s->isOccupied()) {
-                    if (s->getOccupier()->getColor() != pieceColor) {
-                        mLegalMoves.insert(s);
-                        return;
-                    }
-                    return;
-                }
-                mLegalMoves.insert(s);
-                if (position.y - 2 >= 0) {
-                    mLegalMoves.insert(pPiece->mSquare->mBoard->squareAt(
-                        sf::Vector2i(position.x, position.y - 2)));
-                }
-            }
-            return;
-        }
-        if (position.y + 1 < 8) {
-            auto s = pPiece->mSquare->mBoard->squareAt(sf::Vector2i(position.x, position.y + 1));
-            if (s->isOccupied()) {
-                if (s->getOccupier()->getColor() != pieceColor) {
-                    mLegalMoves.insert(s);
-                    return;
-                }
-                return;
-            }
-            mLegalMoves.insert(s);
-            if (position.y + 2 < 8) {
-                mLegalMoves.insert(
-                    pPiece->mSquare->mBoard->squareAt(sf::Vector2i(position.x, position.y + 2)));
-            }
-        }
-        return;
-    }
-    sf::Vector2i forwardMove;
-    if (pieceColor == EPieceColor::WHITE) {
-        forwardMove = sf::Vector2i(position.x, position.y - 1);
-    } else {
-        forwardMove = sf::Vector2i(position.x, position.y + 1);
-    }
-    if ((forwardMove.y >= 0 && forwardMove.y < 8)) {
+
+    int forward = (pieceColor == EPieceColor::WHITE) ? -1 : 1;
+    int startRow = (pieceColor == EPieceColor::WHITE) ? 6 : 1;
+
+    // Single forward move
+    sf::Vector2i forwardMove(position.x, position.y + forward);
+    if (forwardMove.y >= 0 && forwardMove.y < 8) {
         Square::SquarePtr forwardSquare = pPiece->mSquare->mBoard->squareAt(forwardMove);
         if (!forwardSquare->isOccupied()) {
             mLegalMoves.insert(forwardSquare);
-        }
-        if (forwardMove.x - 1 >= 0) {
-            Square::SquarePtr adjacentLeft =
-                pPiece->mSquare->mBoard->squareAt(sf::Vector2i(forwardMove.x - 1, forwardMove.y));
-            if (adjacentLeft->isOccupied() &&
-                adjacentLeft->getOccupier()->getColor() != mCurrentPlayer->mPlayerColor) {
-                mLegalMoves.insert(adjacentLeft);
-            }
-        }
 
-        if (forwardMove.x + 1 < 8) {
-            Square::SquarePtr adjacentRight =
-                pPiece->mSquare->mBoard->squareAt(sf::Vector2i(forwardMove.x + 1, forwardMove.y));
-            if (adjacentRight->isOccupied() &&
-                adjacentRight->getOccupier()->getColor() != mCurrentPlayer->mPlayerColor) {
-                mLegalMoves.insert(adjacentRight);
+            // Double forward move
+            if (!pPiece->mMovedBefore) {
+                sf::Vector2i doubleForwardMove(position.x, position.y + 2 * forward);
+                Square::SquarePtr doubleForwardSquare =
+                    pPiece->mSquare->mBoard->squareAt(doubleForwardMove);
+                if (doubleForwardSquare && !doubleForwardSquare->isOccupied()) {
+                    mLegalMoves.insert(doubleForwardSquare);
+                }
             }
         }
     }
+
+    // Diagonal captures
+    for (int dx : {-1, 1}) {
+        sf::Vector2i diagonalMove(position.x + dx, position.y + forward);
+        if (diagonalMove.x >= 0 && diagonalMove.x < 8 && diagonalMove.y >= 0 &&
+            diagonalMove.y < 8) {
+            Square::SquarePtr diagonalSquare = pPiece->mSquare->mBoard->squareAt(diagonalMove);
+            if (diagonalSquare->isOccupied() &&
+                diagonalSquare->getOccupier()->getColor() != pieceColor) {
+                mLegalMoves.insert(diagonalSquare);
+            }
+        }
+    }
+
     Square::SquarePtr enPassant = Engine::isEnPassant(pPiece);
     if (enPassant) {
         mLegalMoves.insert(enPassant);
@@ -296,73 +265,101 @@ void Engine::generatePawnMoves(Piece::PiecePtr pPiece) {
 
 Square::SquarePtr Engine::isEnPassant(Piece::PiecePtr pPawn) {
     sf::Vector2f pos = pPawn->mSquare->getPostion();
+    EPieceColor pawnColor = pPawn->getColor();
+
+    int enPassantRank = (pawnColor == EPieceColor::WHITE) ? 3 : 4;
+    if (pPawn->mSquare->getY() != enPassantRank) {
+        return nullptr;
+    }
+
     Square::SquarePtr adjLeft = mBoard->squareAt({int(pos.x - 1), int(pos.y)});
     Square::SquarePtr adjRight = mBoard->squareAt({int(pos.x + 1), int(pos.y)});
-    if (pPawn->mSquare->getY() == 3 || pPawn->mSquare->getY() == 4) {
-        if ((adjRight && adjRight->isOccupied()) || (adjLeft && adjLeft->isOccupied())) {
-            Move m = mMoveHistory.top();
-            if (m.mOccupier->mType != EPieceType::PAWN) {
-                return nullptr;
-            }
-            int nSquares = std::abs(m.mFrom->getY() - m.mTo->getY());
-            if ((m.mTo == adjLeft || m.mTo == adjRight) && nSquares == 2) {
-                if (m.mTo == adjLeft) {
-                    return adjLeft;
-                } else if (m.mTo == adjRight) {
-                    return adjRight;
-                }
-            }
-        }
+    if ((!adjLeft || !adjLeft->isOccupied()) && (!adjRight || !adjRight->isOccupied())) {
+        return nullptr;
     }
+    if (mMoveHistory.empty()) {
+        return nullptr;
+    }
+
+    Move lastMove = mMoveHistory.top();
+    if (lastMove.mOccupier->mType != EPieceType::PAWN) {
+        return nullptr;
+    }
+
+    int nSquares = std::abs(lastMove.mFrom->getY() - lastMove.mTo->getY());
+    if (nSquares != 2) {
+        return nullptr;
+    }
+
+    if (adjLeft && lastMove.mTo == adjLeft) {
+        return adjLeft;
+    }
+    if (adjRight && lastMove.mTo == adjRight) {
+        return adjRight;
+    }
+
     return nullptr;
 }
 
-void Engine::generateUsingCoords(Piece::PiecePtr pPiece, std::vector<std::pair<int, int>> pCoords) {
+void Engine::generateUsingCoords(Piece::PiecePtr pPiece,
+                                 const std::vector<std::pair<int, int>> &pCoords) {
     sf::Vector2f position = pPiece->mSquare->getPostion();
     EPieceColor color = pPiece->mSquare->getOccupier()->getColor();
 
+    // Iterate over the direction pairs
     for (auto &[x, y] : pCoords) {
         sf::Vector2i newPosition(position.x, position.y);
-        while (newPosition.x + x >= 0 && newPosition.x + x < 8 && newPosition.y + y >= 0 &&
-               newPosition.y + y < 8) {
+
+        // Continue moving in the direction while within bounds
+        while (true) {
             newPosition.x += x;
             newPosition.y += y;
+
+            // Check for board boundaries
+            if (newPosition.x < 0 || newPosition.x >= 8 || newPosition.y < 0 ||
+                newPosition.y >= 8) {
+                break;
+            }
+
             Square::SquarePtr adjacentSquare = pPiece->mSquare->mBoard->squareAt(newPosition);
+
+            // If square is occupied
             if (adjacentSquare->isOccupied()) {
+                // If the occupier is the same color, stop
                 if (adjacentSquare->getOccupier()->getColor() == color) {
                     break;
                 }
+                // If the occupier is of the opposite color, this is a valid move
                 mLegalMoves.insert(adjacentSquare);
-                break;
+                break;  // No further moves in this direction
             }
+
+            // If square is empty, it's a valid move
             mLegalMoves.insert(adjacentSquare);
         }
     }
 }
 
 void Engine::generateRookMoves(Piece::PiecePtr pPiece) {
-    sf::Vector2f position = pPiece->mSquare->getPostion();
     std::vector<std::pair<int, int>> coords{
-        {0,  -1},
-        {0,  +1},
-        {+1, 0 },
-        {-1, 0 }
+        {0,  -1}, // Move up
+        {0,  +1}, // Move down
+        {+1, 0 }, // Move right
+        {-1, 0 }  // Move left
     };
 
-    generateUsingCoords(pPiece, std::move(coords));
+    generateUsingCoords(pPiece, coords);
 }
 
 void Engine::generateBishopMoves(Piece::PiecePtr pPiece) {
-    sf::Vector2f position = pPiece->mSquare->getPostion();
-
     std::vector<std::pair<int, int>> coords{
-        {+1, -1},
-        {-1, -1},
-        {+1, +1},
-        {-1, +1}
+        {+1, -1}, // Move diagonally up-left
+        {-1, -1}, // Move diagonally up-right
+        {+1, +1}, // Move diagonally down-left
+        {-1, +1}  // Move diagonally down-right
     };
 
-    generateUsingCoords(pPiece, std::move(coords));
+    generateUsingCoords(pPiece, coords);
 }
 
 void Engine::generateQueenMoves(Piece::PiecePtr pPiece) {
@@ -370,11 +367,28 @@ void Engine::generateQueenMoves(Piece::PiecePtr pPiece) {
     generateRookMoves(pPiece);
 }
 
-void Engine::generateKingMoves(Piece::PiecePtr pPiece) {
+void Engine::generateMovesForPiece(Piece::PiecePtr pPiece,
+                                   const std::vector<sf::Vector2i> &directions) {
     sf::Vector2f position = pPiece->mSquare->getPostion();
     EPieceColor color = pPiece->getColor();
 
-    std::vector<std::pair<int, int>> coords{
+    for (const auto &dir : directions) {
+        sf::Vector2i newPosition(position.x + dir.x, position.y + dir.y);
+
+        // Check if within bounds
+        if (newPosition.x >= 0 && newPosition.x < 8 && newPosition.y >= 0 && newPosition.y < 8) {
+            Square::SquarePtr adjacent = pPiece->mSquare->mBoard->squareAt(newPosition);
+
+            // If square is unoccupied or occupied by the opponent's piece, add to legal moves
+            if (!adjacent->isOccupied() || adjacent->getOccupier()->getColor() != color) {
+                mLegalMoves.insert(adjacent);
+            }
+        }
+    }
+}
+
+void Engine::generateKingMoves(Piece::PiecePtr pPiece) {
+    std::vector<sf::Vector2i> coords{
         {0,  -1},
         {0,  +1},
         {-1, 0 },
@@ -385,30 +399,12 @@ void Engine::generateKingMoves(Piece::PiecePtr pPiece) {
         {+1, +1}
     };
 
-    for (auto &[x, y] : coords) {
-        if (position.x + x >= 0 && position.x + x < 8 && position.y + y >= 0 &&
-            position.y + y < 8) {
-            sf::Vector2i newPosition(position.x + x, position.y + y);
-            Square::SquarePtr adjacent = pPiece->mSquare->mBoard->squareAt(newPosition);
-            if (!adjacent->isOccupied()) {
-                mLegalMoves.insert(adjacent);
-                continue;
-            }
-            if (adjacent->getOccupier()->getColor() != color) {
-                if (adjacent->getOccupier()->getType() == EPieceType::KING) {
-                    continue;
-                }
-                mLegalMoves.insert(adjacent);
-            }
-        }
-    }
+    generateMovesForPiece(pPiece, coords);
 }
 
+// Generate Knight moves (L-shaped movement)
 void Engine::generateKnightMoves(Piece::PiecePtr pPiece) {
-    sf::Vector2f position = pPiece->mSquare->getPostion();
-    EPieceColor color = pPiece->getColor();
-
-    std::vector<std::pair<int, int>> coords{
+    std::vector<sf::Vector2i> coords{
         {-2, -1},
         {-2, +1},
         {+2, -1},
@@ -416,20 +412,10 @@ void Engine::generateKnightMoves(Piece::PiecePtr pPiece) {
         {+1, +2},
         {-1, +2},
         {+1, -2},
-        {-1, -2},
+        {-1, -2}
     };
 
-    for (auto &[x, y] : coords) {
-        if (position.x + x >= 0 && position.x + x < 8 && position.y + y >= 0 &&
-            position.y + y < 8) {
-            sf::Vector2i newPosition(position.x + x, position.y + y);
-            Square::SquarePtr adjacent = pPiece->mSquare->mBoard->squareAt(newPosition);
-            if (adjacent->isOccupied() && adjacent->getOccupier()->getColor() == color) {
-                continue;
-            }
-            mLegalMoves.insert(adjacent);
-        }
-    }
+    generateMovesForPiece(pPiece, coords);
 }
 
 void Engine::clearHighlights() {
@@ -733,8 +719,7 @@ void Engine::makeBestMove() {
 
         // Add capture bonus BEFORE comparison
         if (move.mMoveType == MoveType::CAPTURE) {
-            moveValue +=
-                getPieceValue(move.mOpponent->getType()) * 2;  // Increase capture incentive
+            moveValue += getPieceValue(move.mOpponent->getType());  // Increase capture incentive
         }
 
         undoMove();

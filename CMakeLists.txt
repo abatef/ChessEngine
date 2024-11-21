@@ -33,6 +33,7 @@ target_link_libraries(ChessEngine ImGui-SFML::ImGui-SFML)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(ChessEngine PRIVATE IMGUI_MODE)
+  target_compile_options(ChessEngine PRIVATE -O0 -g)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")

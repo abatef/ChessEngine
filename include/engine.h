@@ -63,7 +63,9 @@ class Engine {
     void generateKingMoves(Piece::PiecePtr pPiece);
     void generateQueenMoves(Piece::PiecePtr pPiece);
     void generateRookMoves(Piece::PiecePtr pPiece);
-    void generateUsingCoords(Piece::PiecePtr pPiece, std::vector<std::pair<int, int>> pCoords);
+    void generateUsingCoords(Piece::PiecePtr pPiece,
+                             const std::vector<std::pair<int, int>>& pCoords);
+    void generateMovesForPiece(Piece::PiecePtr pPiece, const std::vector<sf::Vector2i>& directions);
     void switchPlayers();
     void makeMove(Move pMove);
     void undoMove();
