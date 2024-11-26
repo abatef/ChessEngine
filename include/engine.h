@@ -103,6 +103,7 @@ class Engine {
     void clearHighlights();
     void highlightSquares();
     bool isLegalMove(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSquare);
+    void resetEngine();
 
     static Square::SquarePtr mSelectedSquare;
 };

@@ -27,7 +27,7 @@
 #include "square.h"
 
 static Piece::PiecePtr sSelectedPiece = nullptr;
-static bool sRulesDisabled = false;
+static bool sRulesDisabled = true;
 static bool sMoveHistoryShown = false;
 static bool sPieceInfoShown = false;
 static bool sMoveGeneration = false;
@@ -102,6 +102,14 @@ Engine::Engine(InputDispatcher pInputDispatcher)
 const sf::Color GREEN_SQUARE(118, 150, 86);
 
 Square::SquarePtr Engine::mSelectedSquare = nullptr;
+
+void Engine::resetEngine() {
+    mBoard = std::make_shared<Board>();
+    mBoard->init();
+    if (mCurrentPlayer->mPlayerColor != EPieceColor::WHITE) {
+        mCurrentPlayer = mCurrentPlayer->mNext;
+    }
+}
 
 void Engine::switchPlayers() {
     auto king = findKing(mCurrentPlayer->mPlayerColor);
@@ -189,6 +197,8 @@ void Engine::movePiece(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSquar
     if (pOccupier->mType != EPieceType::KING) {
         if (wouldExposeKing(move)) {
             deselectSquare();
+            auto king = findKing(mCurrentPlayer->mPlayerColor);
+            king->mSquare->select();
             return;
         }
     }
@@ -621,19 +631,16 @@ void Engine::loop() {
 #ifdef IMGUI_MODE
         handleImGui();
 #endif
-
         mRenderer.update();
         sf::sleep(sf::milliseconds(10));
     }
 }
 
 Piece::PiecePtr Engine::findKing(EPieceColor pColor) const {
-    for (auto &p : mBoard->getPieces()) {
-        if (p->mType == EPieceType::KING && p->mColor == pColor && p->mSquare) {
-            return p;
-        }
+    if (pColor == EPieceColor::WHITE) {
+        return mBoard->getPieces()[28];
     }
-    return nullptr;
+    return mBoard->getPieces()[29];
 }
 
 std::vector<Piece::PiecePtr> Engine::getOpponents(EPieceColor pColor) const {
@@ -675,7 +682,6 @@ void Engine::checkForCheckmate() {
         return;
     }
     auto king = findKing(mCurrentPlayer->mPlayerColor);
-    king->mSquare->select();
     auto moves = generateAllPossibleMoves(mCurrentPlayer->mPlayerColor);
 
     for (auto &m : moves) {
@@ -684,14 +690,13 @@ void Engine::checkForCheckmate() {
         }
     }
 
-    // declare check mate
     declareCheckmate();
     endGame();
 }
 
 void Engine::declareCheckmate() { std::cout << "Checkmate" << std::endl; }
 
-void Engine::endGame() { mBoard.reset(); }
+void Engine::endGame() { resetEngine(); }
 
 std::vector<Move> Engine::generateAllPossibleMoves(EPieceColor pPieceColor) {
     mLegalMoves.clear();
