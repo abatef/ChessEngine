@@ -48,6 +48,7 @@ class Engine {
     sf::Clock mClock;
     AnimationEngine mAnimationEngine;
     std::set<Square::SquarePtr> mLegalMoves;
+    std::set<Square::SquarePtr> mCachedMoves;
     GameMode mGameMode;
     std::stack<Move> mMoveHistory;
     Player* mCurrentPlayer;
@@ -56,16 +57,18 @@ class Engine {
     const float kMovementDuration = 3.f;
 
    private:
-    void generatePawnMoves(Piece::PiecePtr pPiece);
+    std::vector<Square::SquarePtr> generatePawnMoves(Piece::PiecePtr pPiece);
     Square::SquarePtr isEnPassant(Piece::PiecePtr pPawn);
-    void generateBishopMoves(Piece::PiecePtr pPiece);
-    void generateKnightMoves(Piece::PiecePtr pPiece);
-    void generateKingMoves(Piece::PiecePtr pPiece);
-    void generateQueenMoves(Piece::PiecePtr pPiece);
-    void generateRookMoves(Piece::PiecePtr pPiece);
-    void generateUsingCoords(Piece::PiecePtr pPiece,
-                             const std::vector<std::pair<int, int>>& pCoords);
-    void generateMovesForPiece(Piece::PiecePtr pPiece, const std::vector<sf::Vector2i>& directions);
+    std::vector<Square::SquarePtr> generateBishopMoves(Piece::PiecePtr pPiece);
+    std::vector<Square::SquarePtr> generateKnightMoves(Piece::PiecePtr pPiece);
+    std::vector<Square::SquarePtr> generateKingMoves(Piece::PiecePtr pPiece);
+    std::vector<Square::SquarePtr> generateQueenMoves(Piece::PiecePtr pPiece);
+    std::vector<Square::SquarePtr> generateRookMoves(Piece::PiecePtr pPiece);
+    std::vector<Square::SquarePtr> generateUsingCoords(
+        Piece::PiecePtr pPiece, const std::vector<std::pair<int, int>>& pCoords);
+    std::vector<Square::SquarePtr> generateMovesForPiece(
+        Piece::PiecePtr pPiece, const std::vector<sf::Vector2i>& directions);
+    void copyMoves(std::vector<Square::SquarePtr> pMoves);
     void switchPlayers();
     void makeMove(Move pMove);
     void undoMove();
@@ -77,6 +80,13 @@ class Engine {
 #ifdef IMGUI_MODE
     void handleImGui();
 #endif
+    Piece::PiecePtr findKing(EPieceColor pColor) const;
+    std::vector<Piece::PiecePtr> getOpponents(EPieceColor pColor) const;
+    bool isPlayerInCheck(EPieceColor pColor);
+    bool wouldExposeKing(Move& m);
+    void checkForCheckmate();
+    void declareCheckmate();
+    void endGame();
 
    public:
     Engine();
@@ -89,7 +99,7 @@ class Engine {
     void capturePiece(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSquare);
     void switchSelection(Square::SquarePtr pCurrentSquare);
     void deselectSquare();
-    void generatePossibleMoves(Piece::PiecePtr pPiece);
+    std::vector<Square::SquarePtr> generatePossibleMoves(Piece::PiecePtr pPiece);
     void clearHighlights();
     void highlightSquares();
     bool isLegalMove(Piece::PiecePtr pOccupier, Square::SquarePtr pTargetSquare);

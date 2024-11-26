@@ -35,6 +35,7 @@ void Square::clear() {
         mOccupier->deOccupy();
         mOccupier = nullptr;
     }
+    deSelect();
 }
 
 EPieceColor Square::getSquareColor() const { return mSquareColor; }
