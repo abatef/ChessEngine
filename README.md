@@ -2,6 +2,8 @@
 
 A **Chess Engine** implemented in C++, offering a comprehensive chess-playing experience with multiple game modes and smooth animations. The engine supports standard chess rules and is designed for both casual play and further development.
 
+![Chess Engine Gameplay](assets/gifs/engine.gif)
+
 ## Features
 
 ### Gameplay
