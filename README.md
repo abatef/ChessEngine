@@ -12,19 +12,10 @@ A **Chess Engine** implemented in C++, offering a comprehensive chess-playing ex
   - Special moves: castling, en passant, and pawn promotion.
   - Check, checkmate, and stalemate detection.
 - **Game Modes**:
-  - Local multiplayer (two players on the same machine).
-  - Online multiplayer (two players over a network).
-  - Twitch chat mode (players make moves via chat commands).
+  - Local multiplayer (two players on the same machine)  IN-PROGRESS.
+  - Online multiplayer (two players over a network) IN-PROGRESS.
+  - Twitch chat mode (players make moves via chat commands) IN-PROGRESS.
   - Single-player (play against a computer opponent with a basic AI).
-
-### Visuals & Interaction
-- **Custom Animation Engine**: Smooth transitions for piece movement across the board.
-- **Modular Input Handling**: Supports local inputs, online commands, and Twitch chat commands.
-- **Interactive UI**: Built with **ImGui-SFML**, providing a clean and intuitive interface.
-
-### Code Design
-- **Extensible Structure**: Designed for adding new features, game modes, or chess variants.
-- **Clear Separation**: Logic, input handling, rendering, and animations are modularized for clarity and maintainability.
 
 ## Code Overview
 
@@ -60,32 +51,6 @@ A **Chess Engine** implemented in C++, offering a comprehensive chess-playing ex
 - **SFML**: For rendering and input handling.
 - **ImGui-SFML**: For GUI integration.
 
-### Build Instructions
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/chess-engine.git
-   cd chess-engine
-   ```
-2. Create a build directory:
-   ```bash
-   mkdir build && cd build
-   ```
-3. Configure the build with CMake:
-   ```bash
-   cmake ..
-   ```
-4. Compile the project:
-   ```bash
-   make
-   ```
-5. Run the executable:
-   ```bash
-   ./ChessEngine
-   ```
-
----
-
-
 ---
 
 ## Future Plans
@@ -96,8 +61,6 @@ A **Chess Engine** implemented in C++, offering a comprehensive chess-playing ex
 - **Enhanced UI**: Improve the user interface for a better experience.
 
 ---
-
-
 
 ## License
 
