@@ -274,12 +274,12 @@ void Engine::proccessMove(Square::SquarePtr pCurrentSquare) {
 
 void Engine::handleInput() {
     InputObject io = mInputDispatcher.captureInput();
-    if (io.mType == ActionType::NONE) {
+    if (io.type == ActionType::NONE) {
         return;
     }
     mRenderer.mDrawFlag = true;
-    if (io.mType == ActionType::PRESS) {
-        sf::Vector2i target = io.action.mTarget;
+    if (io.type == ActionType::PRESS) {
+        sf::Vector2i target = io.coord;
         auto currentSquare = mBoard->selectSquare(target);
         if (mSelectedSquare == nullptr) {
             selectSquare(currentSquare);
